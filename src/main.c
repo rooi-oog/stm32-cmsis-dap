@@ -59,7 +59,7 @@ void main (void)
 	gpio_setup ();	
 	
 	// delay ~100ms
-	for (uint32_t i = 0; i < rcc_ahb_frequency / 10; i++)
+	for (uint32_t i = rcc_ahb_frequency / 10; i > 0; i--)
 		__asm__ ("nop");
 		
 	while (1)
