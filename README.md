@@ -1,2 +1,2 @@
 # stm32-cmsis-dap
-CMSIS-DAP implementation on STM32F103
+CMSIS-DAP implementation on STM32F103C8
