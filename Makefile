@@ -53,14 +53,14 @@ cpu			:= $(shell echo $(CPU) | tr A-Z a-z)
 
 # ------------------------------------------------------------------------------------------- #
 # Programm name
-PROG_NAME	:= stm32_template
+PROG_NAME	:= stm32_cmsis_dap
 
 # where built files will be stored
 TARGET_DIR	:= build
 TARGET		:= $(PROG_NAME).elf
 
 # Cortex M3/4 system files 
-OPENCM3_DIR	:= opencm3
+OPENCM3_DIR	:= libopencm3
 OBJS		+= $(patsubst %.c, %.o, $(shell ls -1 newlib/*.c))
 
 # CMSIS-DAP reference implementation
@@ -91,7 +91,7 @@ LDFLAGS		+= --specs=nano.specs
 INCLUDE		:= $(OPENCM3_DIR)/include cmsis_dap src
 
 # External libraries
-LIBS		:= -L$(OPENCM3_DIR) -lopencm3_$(cpu)
+LIBS		:= -L$(OPENCM3_DIR)/lib -lopencm3_$(cpu)
 
 # Cross-compile tools
 PREFIX		:= arm-none-eabi-
