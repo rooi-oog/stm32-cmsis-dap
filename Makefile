@@ -8,7 +8,7 @@
 
 # STM32F4-Discovery board
 #BOARD		:= STM32F4_DISCOVERY
-#FPU			:= hard
+#FPU		:= hard
 #HSE_VALUE	:= 8000000
 
 # Made by mySelf STM32F103C8 board
@@ -24,8 +24,7 @@ ifeq ($(BOARD),STM32F1_MINIMAL)
 CPU			:= STM32F1
 MCPU		:= -mcpu=cortex-m3 -mfloat-abi=soft
 LDSCRIPT	:= -T "stm32f103x8.ld"
-STLVER		?= v2.1
- 
+OOCD_IF		?= cmsis_dap 
 # ------------------------------------------------------ #
 else ifeq ($(BOARD),NUCLEO_F401RE)
 CPU			:= STM32F4
@@ -34,8 +33,7 @@ ifeq ($(FPU),hard)
 MCPU		+= -mfpu=fpv4-sp-d16
 endif
 LDSCRIPT	+= -T "stm32f401xe.ld"
-STLVER		?= v2.1
-
+OOCD_IF		?= v2.1
 # ------------------------------------------------------ #
 else ifeq ($(BOARD),STM32F4_DISCOVERY)
 CPU			:= STM32F4
@@ -44,9 +42,9 @@ ifeq ($(FPU),hard)
 MCPU		+= -mfpu=fpv4-sp-d16
 endif
 LDSCRIPT	+= -T "stm32f407xg.ld"
-STLVER		?= v2
-
+OOCD_IF		?= v2
 # ------------------------------------------------------ #
+
 endif
 
 cpu			:= $(shell echo $(CPU) | tr A-Z a-z)
@@ -59,9 +57,8 @@ PROG_NAME	:= stm32_cmsis_dap
 TARGET_DIR	:= build
 TARGET		:= $(PROG_NAME).elf
 
-# Cortex M3/4 system files 
+# Libopencm3 directory
 OPENCM3_DIR	:= libopencm3
-OBJS		+= $(patsubst %.c, %.o, $(shell ls -1 newlib/*.c))
 
 # CMSIS-DAP reference implementation
 OBJS		+= $(patsubst %.c, %.o, $(shell find -L cmsis_dap -type f -name "*.c"))
@@ -70,28 +67,29 @@ OBJS		+= $(patsubst %.c, %.o, $(shell find -L cmsis_dap -type f -name "*.c"))
 OBJS		+= $(patsubst %.c, %.o, $(shell find -L src -type f -name "*.c"))
 
 # Optimization / debug flags
-OPT			:= -O2 # -Og -g3
+OPT			:= -Os # -Og -g3
 
 # Common C and Linker flags
-FLAGS		:= $(MCPU) $(OPT) -mthumb -fmessage-length=0 -fsigned-char 
+FLAGS		:= $(MCPU) $(OPT)
+FLAGS		+= -mthumb -fmessage-length=0 -fsigned-char 
 FLAGS		+= -ffunction-sections -fdata-sections -ffreestanding 
-FLAGS		+= -fno-move-loop-invariants -Wall -Wextra
+FLAGS		+= -fno-common -fno-move-loop-invariants -Wall -Wextra
 
 # C compiler flags
-CFLAGS		:= $(FLAGS) -D$(CPU) -DHSE_VALUE=$(HSE_VALUE) -D$(BOARD) #-DUSE_DEBUG
+CFLAGS		:= $(FLAGS) -D$(CPU) -DHSE_VALUE=$(HSE_VALUE) -D$(BOARD) -DUSE_DEBUG
 
 # Linker flags
 LDFLAGS		:= $(FLAGS)
-LDFLAGS		+= -nostartfiles -Xlinker --gc-sections
-#LDFLAGS	+= -Wl,--defsym=_Heap_Begin=,--defsym=_Heap_Limit=
+LDFLAGS		+= --static -nostartfiles -Wl,--gc-sections
 LDFLAGS 	+= -L "ldscripts/" $(LDSCRIPT) -Wl,-Map,"$(TARGET_DIR)/$(PROG_NAME).map"
 LDFLAGS		+= --specs=nano.specs
+
 
 # Include directories
 INCLUDE		:= $(OPENCM3_DIR)/include cmsis_dap src
 
 # External libraries
-LIBS		:= -L$(OPENCM3_DIR)/lib -lopencm3_$(cpu)
+LIBS		:= -L$(OPENCM3_DIR)/lib -lopencm3_$(cpu) -Wl,--start-group -lc -lgcc -lnosys -Wl,--end-group
 
 # Cross-compile tools
 PREFIX		:= arm-none-eabi-
@@ -113,11 +111,11 @@ bin: $(TARGET)
 	
 # Upload firmware to MCU	
 pgm: $(TARGET)
-	openocd -f stlink_$(STLVER).cfg -c "source [find target/$(cpu)x.cfg]" -c "program $(TARGET_DIR)/$(TARGET) verify reset exit"
+	openocd -f $(OOCD_IF).cfg -c "source [find target/$(cpu)x.cfg]" -c "program $(TARGET_DIR)/$(TARGET) verify reset exit"
 	
 # Start OpenOCD server	
 debug: $(TARGET)
-	openocd -f stlink_$(STLVER).cfg -c "source [find target/$(cpu)x.cfg]"
+	openocd -f $(OOCD_IF).cfg -c "source [find target/$(cpu)x.cfg]"
 		
 	
 $(TARGET): $(OBJS)

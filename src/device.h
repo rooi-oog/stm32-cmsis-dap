@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/cm3/systick.h>
 #include <libopencm3/stm32/gpio.h>

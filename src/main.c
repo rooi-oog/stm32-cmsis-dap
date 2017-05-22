@@ -67,7 +67,7 @@ void main (void)
 		/* When packet received from the Host */
 		if (usbhid_read_nonblock ())
 		{
-			int len;
+			int len;	
 			
 			/* Pick request from the usb Host */
 			usbhid_read (&request, &len);

@@ -337,6 +337,7 @@ static __inline uint32_t PIN_nRESET_IN  (void)
 */
 static __inline void     PIN_nRESET_OUT (uint32_t bit) 
 {
+
 	if (bit & 0x01) 
 		gpio_set (JTAG_PORT, JTAG_nRESET); 
 	else 
@@ -406,7 +407,7 @@ static __inline void DAP_SETUP (void)
 {
 	gpio_set_mode (JTAG_PORT, GPIO_MODE_OUTPUT_10_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, JTAG_TCK | JTAG_TMS | JTAG_TDI);	
 	gpio_set_mode (JTAG_PORT, GPIO_MODE_INPUT, GPIO_CNF_INPUT_PULL_UPDOWN, JTAG_TDO);	
-	gpio_set_mode (JTAG_PORT, GPIO_MODE_OUTPUT_10_MHZ, GPIO_CNF_OUTPUT_OPENDRAIN, JTAG_nTRST | JTAG_nRESET);
+	gpio_set_mode (JTAG_PORT, GPIO_MODE_OUTPUT_10_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, JTAG_nTRST | JTAG_nRESET);
 	gpio_set (JTAG_PORT, JTAG_nTRST | JTAG_nRESET);
 }
 
@@ -417,7 +418,7 @@ when a device needs a time-critical unlock sequence that enables the debug port.
 \return 0 = no device specific reset sequence is implemented.\n
         1 = a device specific reset sequence is implemented.
 */
-static __inline uint32_t RESET_TARGET (void) {
+static __inline uint32_t RESET_TARGET (void) {	
   return (0);              // change to '1' when a device reset sequence is implemented
 }
 
