@@ -60,7 +60,7 @@ Provides definitions about:
 
 /// Configure maximum number of JTAG devices on the scan chain connected to the Debug Access Port.
 /// This setting impacts the RAM requirements of the Debug Unit. Valid range is 1 .. 255.
-#define DAP_JTAG_DEV_CNT        1               ///< Maximum number of JTAG devices on scan chain
+#define DAP_JTAG_DEV_CNT        8               ///< Maximum number of JTAG devices on scan chain
 
 /// Default communication mode on the Debug Access Port.
 /// Used for the command \ref DAP_Connect when Port Default mode is selected.
@@ -143,9 +143,9 @@ Configures the DAP Hardware I/O pins for JTAG mode:
 static __inline void PORT_JTAG_SETUP (void) 
 {
 	gpio_set_mode (JTAG_PORT, GPIO_MODE_OUTPUT_10_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, 
-		JTAG_TCK | JTAG_TMS | JTAG_TDI | JTAG_nRESET);	
-	gpio_set_mode (JTAG_PORT, GPIO_MODE_INPUT, GPIO_CNF_INPUT_PULL_UPDOWN, JTAG_TDO);
-	gpio_set (JTAG_PORT, JTAG_TCK | JTAG_TMS | JTAG_TDI | JTAG_nRESET);
+		JTAG_TCK | JTAG_TMS | JTAG_TDO | JTAG_nRESET);	
+	gpio_set_mode (JTAG_PORT, GPIO_MODE_INPUT, GPIO_CNF_INPUT_PULL_UPDOWN, JTAG_TDI);
+	gpio_set (JTAG_PORT, JTAG_TCK | JTAG_TMS | JTAG_TDI | JTAG_TDO | JTAG_nRESET);
 }
  
 /** Setup SWD I/O pins: SWCLK, SWDIO, and nRESET.
@@ -179,15 +179,17 @@ static __inline void PORT_OFF (void)
 */
 static __inline uint32_t PIN_SWCLK_TCK_IN  (void) 
 {
-  return gpio_get (JTAG_PORT, JTAG_TCK) != 0;
+	return ((uint16_t) GPIO_IDR (JTAG_PORT) & JTAG_TCK) != 0; 
+  //return gpio_get (JTAG_PORT, JTAG_TCK) != 0;
 }
 
 /** SWCLK/TCK I/O pin: Set Output to High.
 Set the SWCLK/TCK DAP hardware I/O pin to high level.
 */
 static __inline void PIN_SWCLK_TCK_SET (void) 
-{
-  	gpio_set (JTAG_PORT, JTAG_TCK);
+{	
+	GPIO_BSRR (JTAG_PORT) = JTAG_TCK;
+  	//gpio_set (JTAG_PORT, JTAG_TCK);
 }
 
 /** SWCLK/TCK I/O pin: Set Output to Low.
@@ -195,7 +197,8 @@ Set the SWCLK/TCK DAP hardware I/O pin to low level.
 */
 static __inline void     PIN_SWCLK_TCK_CLR (void) 
 {
-	gpio_clear (JTAG_PORT, JTAG_TCK);
+	GPIO_BSRR (JTAG_PORT) = JTAG_TCK << 16;
+	//gpio_clear (JTAG_PORT, JTAG_TCK);
 }
 
 
@@ -206,7 +209,8 @@ static __inline void     PIN_SWCLK_TCK_CLR (void)
 */
 static __inline uint32_t PIN_SWDIO_TMS_IN  (void) 
 {
-  return gpio_get (JTAG_PORT, JTAG_TMS) != 0;
+	return ((uint16_t) GPIO_IDR (JTAG_PORT) & JTAG_TMS) != 0;
+  //return gpio_get (JTAG_PORT, JTAG_TMS) != 0;
 }
 
 /** SWDIO/TMS I/O pin: Set Output to High.
@@ -214,7 +218,8 @@ Set the SWDIO/TMS DAP hardware I/O pin to high level.
 */
 static __inline void     PIN_SWDIO_TMS_SET (void) 
 {
-	gpio_set (JTAG_PORT, JTAG_TMS);
+	GPIO_BSRR (JTAG_PORT) = JTAG_TMS;
+	//gpio_set (JTAG_PORT, JTAG_TMS);
 }
 
 /** SWDIO/TMS I/O pin: Set Output to Low.
@@ -222,7 +227,8 @@ Set the SWDIO/TMS DAP hardware I/O pin to low level.
 */
 static __inline void     PIN_SWDIO_TMS_CLR (void) 
 {
-	gpio_clear (JTAG_PORT, JTAG_TMS);
+	GPIO_BSRR (JTAG_PORT) = JTAG_TMS << 16;
+	//gpio_clear (JTAG_PORT, JTAG_TMS);
 }
 
 /** SWDIO I/O pin: Get Input (used in SWD mode only).
@@ -230,7 +236,8 @@ static __inline void     PIN_SWDIO_TMS_CLR (void)
 */
 static __inline uint32_t PIN_SWDIO_IN (void) 
 {	
-	return gpio_get (SW_PORT, SW_DIO) != 0;
+	return ((uint16_t) GPIO_IDR (SW_PORT) & SW_DIO) != 0;
+	//return gpio_get (SW_PORT, SW_DIO) != 0;
 }
 
 /** SWDIO I/O pin: Set Output (used in SWD mode only).
@@ -238,10 +245,12 @@ static __inline uint32_t PIN_SWDIO_IN (void)
 */
 static __inline void     PIN_SWDIO_OUT     (uint32_t bit) 
 {
-	if (bit & 0x01) 
-		gpio_set (SW_PORT, SW_DIO); 
+	if (bit & 0x01)
+		GPIO_BSRR (SW_PORT) = SW_DIO;
+		//gpio_set (SW_PORT, SW_DIO); 
 	else 
-		gpio_clear (SW_PORT, SW_DIO);
+		GPIO_BSRR (SW_PORT) = SW_DIO << 16;
+		//gpio_clear (SW_PORT, SW_DIO);
 }
 
 /** SWDIO I/O pin: Switch to Output mode (used in SWD mode only).
@@ -271,7 +280,8 @@ static __inline void     PIN_SWDIO_OUT_DISABLE (void)
 */
 static __inline uint32_t PIN_TDI_IN  (void) 
 {
-	return gpio_get (JTAG_PORT, JTAG_TDI) != 0;
+	return ((uint16_t) GPIO_IDR (JTAG_PORT) & JTAG_TDI) != 0;
+	//return gpio_get (JTAG_PORT, JTAG_TDI) != 0;
 }
 
 /** TDI I/O pin: Set Output.
@@ -279,10 +289,12 @@ static __inline uint32_t PIN_TDI_IN  (void)
 */
 static __inline void     PIN_TDI_OUT (uint32_t bit) 
 {
-	if (bit & 0x01) 
-		gpio_set (JTAG_PORT, JTAG_TDI); 
-	else 
-		gpio_clear (JTAG_PORT, JTAG_TDI);
+	if (bit & 0x01)
+		GPIO_BSRR (JTAG_PORT) = JTAG_TDO;
+		//gpio_set (JTAG_PORT, JTAG_TDO); 
+	else
+		GPIO_BSRR (JTAG_PORT) = JTAG_TDO << 16;
+		//gpio_clear (JTAG_PORT, JTAG_TDO);
 }
 
 
@@ -293,7 +305,8 @@ static __inline void     PIN_TDI_OUT (uint32_t bit)
 */
 static __inline uint32_t PIN_TDO_IN  (void) 
 {
-	return gpio_get (JTAG_PORT, JTAG_TDI) != 0;
+	return ((uint16_t) GPIO_IDR (JTAG_PORT) & JTAG_TDI) != 0;
+	//return gpio_get (JTAG_PORT, JTAG_TDI) != 0;
 }
 
 
@@ -304,7 +317,8 @@ static __inline uint32_t PIN_TDO_IN  (void)
 */
 static __inline uint32_t PIN_nTRST_IN   (void) 
 {
-	return gpio_get (JTAG_PORT, JTAG_nTRST) != 0;
+	return ((uint16_t) GPIO_IDR (JTAG_PORT) & JTAG_nTRST) != 0;
+	//return gpio_get (JTAG_PORT, JTAG_nTRST) != 0;
 }
 
 /** nTRST I/O pin: Set Output.
@@ -314,10 +328,12 @@ static __inline uint32_t PIN_nTRST_IN   (void)
 */
 static __inline void     PIN_nTRST_OUT  (uint32_t bit) 
 {
-	if (bit & 0x01) 
-		gpio_set (JTAG_PORT, JTAG_nTRST); 
+	if (bit & 0x01)
+		GPIO_BSRR (JTAG_PORT) = JTAG_nTRST; 
+		//gpio_set (JTAG_PORT, JTAG_nTRST); 
 	else 
-		gpio_clear (JTAG_PORT, JTAG_nTRST); 
+		GPIO_BSRR (JTAG_PORT) = JTAG_nTRST << 16;
+		//gpio_clear (JTAG_PORT, JTAG_nTRST); 
 }
 
 // nRESET Pin I/O------------------------------------------
@@ -327,7 +343,8 @@ static __inline void     PIN_nTRST_OUT  (uint32_t bit)
 */
 static __inline uint32_t PIN_nRESET_IN  (void) 
 {
-	return gpio_get (JTAG_PORT, JTAG_nRESET) != 0;
+	return ((uint16_t) GPIO_IDR (JTAG_PORT) & JTAG_nRESET) != 0;
+	//return gpio_get (JTAG_PORT, JTAG_nRESET) != 0;
 }
 
 /** nRESET I/O pin: Set Output.
@@ -338,10 +355,12 @@ static __inline uint32_t PIN_nRESET_IN  (void)
 static __inline void     PIN_nRESET_OUT (uint32_t bit) 
 {
 
-	if (bit & 0x01) 
-		gpio_set (JTAG_PORT, JTAG_nRESET); 
+	if (bit & 0x01)
+		GPIO_BSRR (JTAG_PORT) = JTAG_nRESET; 
+		//gpio_set (JTAG_PORT, JTAG_nRESET); 
 	else 
-		gpio_clear (JTAG_PORT, JTAG_nRESET);
+		GPIO_BSRR (JTAG_PORT) = JTAG_nRESET << 16;
+		//gpio_clear (JTAG_PORT, JTAG_nRESET);
 }
 
 ///@}

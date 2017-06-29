@@ -23,6 +23,10 @@
 #include "usb_comp.h"
 #include "usb_rw.h"
 
+/*#include <libopencm3/stm32/otg_fs.h>*/
+/*#include <libopencm3/usb/usbd.h>*/
+/*extern usbd_device *usbd_dev;*/
+
 uint8_t *request;
 uint8_t response [DAP_PACKET_SIZE]; 
 
@@ -70,7 +74,7 @@ void main (void)
 			int len;	
 			
 			/* Pick request from the usb Host */
-			usbhid_read (&request, &len);
+			usbhid_read (&request, &len);			
 			
 			/* Handle the request */
 			DAP_ProcessCommand (request, response);
@@ -78,6 +82,8 @@ void main (void)
 			/* Send response to the Host */
 			usbhid_write (response);
 		}
+		
+		//usbd_poll (usbd_dev);
 	}	
 }
 

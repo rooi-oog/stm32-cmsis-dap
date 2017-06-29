@@ -48,7 +48,7 @@ static int comp_control_request (usbd_device *dev, struct usb_setup_data *req, u
 	(void) complete;
 	(void) buf;
 	(void) dev;
-	
+		
 	if ((req->bmRequestType & USB_REQ_TYPE_DIRECTION) == USB_REQ_TYPE_IN)
 	{
 		if ((req->bmRequestType & USB_REQ_TYPE_TYPE) == USB_REQ_TYPE_STANDARD)

@@ -24,7 +24,7 @@ ifeq ($(BOARD),STM32F1_MINIMAL)
 CPU			:= STM32F1
 MCPU		:= -mcpu=cortex-m3 -mfloat-abi=soft
 LDSCRIPT	:= -T "stm32f103x8.ld"
-OOCD_IF		?= cmsis_dap 
+OOCD_IF		?= cmsis_dap
 # ------------------------------------------------------ #
 else ifeq ($(BOARD),NUCLEO_F401RE)
 CPU			:= STM32F4
@@ -67,7 +67,7 @@ OBJS		+= $(patsubst %.c, %.o, $(shell find -L cmsis_dap -type f -name "*.c"))
 OBJS		+= $(patsubst %.c, %.o, $(shell find -L src -type f -name "*.c"))
 
 # Optimization / debug flags
-OPT			:= -Os # -Og -g3
+OPT			:=  -O3 #-Og -g3
 
 # Common C and Linker flags
 FLAGS		:= $(MCPU) $(OPT)
@@ -76,7 +76,7 @@ FLAGS		+= -ffunction-sections -fdata-sections -ffreestanding
 FLAGS		+= -fno-common -fno-move-loop-invariants -Wall -Wextra
 
 # C compiler flags
-CFLAGS		:= $(FLAGS) -D$(CPU) -DHSE_VALUE=$(HSE_VALUE) -D$(BOARD) -DUSE_DEBUG
+CFLAGS		:= $(FLAGS) -D$(CPU) -DHSE_VALUE=$(HSE_VALUE) -D$(BOARD) #-DUSE_DEBUG
 
 # Linker flags
 LDFLAGS		:= $(FLAGS)
